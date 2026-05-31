@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{base}">
+
+<th:block layout:fragment="content">
+
+<div class="row justify-content-center mt-4">
+  <div class="col-md-7 col-lg-6">
+
+    <div class="card" style="border-top: 3px solid var(--champagne) !important; overflow: hidden;">
+
+      <div class="card-header bg-primary" style="border-left: 4px solid var(--champagne) !important; padding: 1.25rem 1.5rem;">
+        <h5 class="mb-0" style="color: #fff;">
+          <i class="fas fa-sync-alt me-2" style="color: var(--champagne);"></i>
+          Programmer un virement récurrent
+        </h5>
+      </div>
+
+      <div class="card-body" style="padding: 2rem;">
+
+        <!-- Messages Flash -->
+        <th:block th:if="${#lists.size(flashMessages) > 0}">
+          <div th:each="msg : ${flashMessages}"
+               th:classappend="${msg.tags}"
+               class="alert"
+               th:text="${msg.text}"></div>
+        </th:block>
+
+        <form th:action="@{/virements-recurrents/creer}" method="post">
+
+          <!-- Compte source -->
+          <div class="mb-3">
+            <label class="form-label">Compte source</label>
+            <select name="compteSource" class="form-select" required>
+              <option value="">-- Choisir un compte --</option>
+              <option th:each="compte : ${comptes}"
+                      th:value="${compte.id}"
+                      th:text="${compte.numeroCompte + ' — ' + #numbers.formatInteger(compte.solde, 0, 'DEFAULT') + ' FCFA'}">
+              </option>
+            </select>
+          </div>
+
+          <!-- Compte destination -->
+          <div class="mb-3">
+            <label class="form-label">Numéro du compte destinataire</label>
+            <div style="position: relative;">
+              <input type="text" name="numeroDestination" class="form-control"
+                placeholder="Ex : SN009876543210"
+                style="padding-right: 2.6rem;" required>
+              <span style="position: absolute; right: 0.85rem; top: 50%; transform: translateY(-50%); color: var(--gray-mid);">
+                <i class="fas fa-university" style="font-size: 13px;"></i>
+              </span>
+            </div>
+          </div>
+
+          <!-- Montant -->
+          <div class="mb-3">
+            <label class="form-label">Montant (FCFA)</label>
+            <div style="position: relative;">
+              <input type="number" name="montant" class="form-control"
+                placeholder="Ex : 50000" min="1"
+                style="padding-right: 3.5rem;" required>
+              <span style="position: absolute; right: 0.85rem; top: 50%; transform: translateY(-50%); color: var(--gray-mid); font-size: 0.75rem; font-weight: 500;">FCFA</span>
+            </div>
+          </div>
+
+          <!-- Fréquence -->
+          <div class="mb-3">
+            <label class="form-label">Fréquence</label>
+            <div style="display: flex; gap: 10px;">
+              <!--
+                frequences est une List<String[]> ou List<Object[]> avec [valeur, libellé]
+                ex: [["quotidien","Quotidien"],["hebdo","Hebdomadaire"],["mensuel","Mensuel"]]
+              -->
+              <th:block th:if="${frequences != null and !#lists.isEmpty(frequences)}">
+                <label th:each="freq : ${frequences}" style="flex: 1; cursor: pointer;">
+                  <input type="radio" name="frequence"
+                         th:value="${freq[0]}"
+                         th:checked="${freq[0] == 'mensuel'}"
+                         style="display: none;"
+                         onchange="document.querySelectorAll('.freq-btn').forEach(b => b.style.borderColor='var(--gray-light)'); this.parentElement.querySelector('.freq-btn').style.borderColor='var(--champagne)'">
+                  <div class="freq-btn"
+                       th:style="'text-align: center; padding: 0.6rem; border: 1.5px solid ' + (${freq[0] == 'mensuel'} ? 'var(--champagne)' : 'var(--gray-light)') + '; border-radius: var(--radius); font-size: 0.78rem; font-weight: 500; color: var(--black); transition: border-color 0.2s;'">
+                    <i th:classappend="${freq[0] == 'quotidien'} ? 'fa-sun' : (${freq[0] == 'hebdo'} ? 'fa-calendar-week' : 'fa-calendar-alt')"
+                       class="fas"
+                       style="display: block; font-size: 16px; color: var(--champagne); margin-bottom: 4px;"></i>
+                    <span th:text="${freq[1]}"></span>
+                  </div>
+                </label>
+              </th:block>
+
+              <!-- Fallback si frequences est vide -->
+              <th:block th:if="${frequences == null or #lists.isEmpty(frequences)}">
+                <label style="flex: 1; cursor: pointer;">
+                  <input type="radio" name="frequence" value="quotidien" style="display: none;"
+                         onchange="document.querySelectorAll('.freq-btn').forEach(b => b.style.borderColor='var(--gray-light)'); this.parentElement.querySelector('.freq-btn').style.borderColor='var(--champagne)'">
+                  <div class="freq-btn" style="text-align: center; padding: 0.6rem; border: 1.5px solid var(--gray-light); border-radius: var(--radius); font-size: 0.78rem; font-weight: 500; color: var(--black);">
+                    <i class="fas fa-sun" style="display: block; font-size: 16px; color: var(--champagne); margin-bottom: 4px;"></i>
+                    Quotidien
+                  </div>
+                </label>
+                <label style="flex: 1; cursor: pointer;">
+                  <input type="radio" name="frequence" value="hebdo" style="display: none;"
+                         onchange="document.querySelectorAll('.freq-btn').forEach(b => b.style.borderColor='var(--gray-light)'); this.parentElement.querySelector('.freq-btn').style.borderColor='var(--champagne)'">
+                  <div class="freq-btn" style="text-align: center; padding: 0.6rem; border: 1.5px solid var(--gray-light); border-radius: var(--radius); font-size: 0.78rem; font-weight: 500; color: var(--black);">
+                    <i class="fas fa-calendar-week" style="display: block; font-size: 16px; color: var(--champagne); margin-bottom: 4px;"></i>
+                    Hebdomadaire
+                  </div>
+                </label>
+                <label style="flex: 1; cursor: pointer;">
+                  <input type="radio" name="frequence" value="mensuel" checked style="display: none;"
+                         onchange="document.querySelectorAll('.freq-btn').forEach(b => b.style.borderColor='var(--gray-light)'); this.parentElement.querySelector('.freq-btn').style.borderColor='var(--champagne)'">
+                  <div class="freq-btn" style="text-align: center; padding: 0.6rem; border: 1.5px solid var(--champagne); border-radius: var(--radius); font-size: 0.78rem; font-weight: 500; color: var(--black);">
+                    <i class="fas fa-calendar-alt" style="display: block; font-size: 16px; color: var(--champagne); margin-bottom: 4px;"></i>
+                    Mensuel
+                  </div>
+                </label>
+              </th:block>
+            </div>
+          </div>
+
+          <!-- Dates -->
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 1rem;">
+            <div>
+              <label class="form-label">Date de début</label>
+              <input type="date" name="dateDebut" class="form-control" required
+                th:value="${#temporals.format(#temporals.createNow(), 'yyyy-MM-dd')}">
+            </div>
+            <div>
+              <label class="form-label">Date de fin
+                <span style="color: var(--gray-mid); font-size: 0.7rem;">(optionnel)</span>
+              </label>
+              <input type="date" name="dateFin" class="form-control">
+            </div>
+          </div>
+
+          <!-- Motif -->
+          <div class="mb-3">
+            <label class="form-label">Motif
+              <span style="color: var(--gray-mid); font-size: 0.7rem;">(optionnel)</span>
+            </label>
+            <input type="text" name="motif" class="form-control" placeholder="Ex : Loyer mensuel">
+          </div>
+
+          <div class="d-grid" style="margin-top: 1.5rem; gap: 10px;">
+            <button type="submit" class="btn btn-primary" style="display: flex; align-items: center; justify-content: center; gap: 8px;">
+              <i class="fas fa-check" style="font-size: 12px;"></i>
+              Programmer le virement
+            </button>
+            <a th:href="@{/virements-recurrents}"
+              style="display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 0.78rem; color: var(--gray-mid); text-decoration: none; padding: 0.4rem;">
+              <i class="fas fa-arrow-left" style="font-size: 10px;"></i>
+              Retour à la liste
+            </a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+</th:block>
+</html>

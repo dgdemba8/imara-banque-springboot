@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{base}">
+
+<th:block layout:fragment="content">
+
+<div class="row mt-4">
+  <div class="col-12 d-flex align-items-center justify-content-between" style="margin-bottom: 0.5rem;">
+    <h2>
+      <i class="fas fa-sync-alt me-2" style="color: var(--champagne); font-size: 1.2rem;"></i>
+      Virements Récurrents
+    </h2>
+    <a th:href="@{/virements-recurrents/creer}" class="btn btn-primary"
+       style="display: inline-flex; align-items: center; gap: 7px;">
+      <i class="fas fa-plus" style="font-size: 11px;"></i>
+      Nouveau
+    </a>
+  </div>
+  <div class="col-12"><hr></div>
+</div>
+
+<!-- Messages Flash -->
+<th:block th:if="${flashMessages != null and !#lists.isEmpty(flashMessages)}">
+  <div th:each="msg : ${flashMessages}"
+       th:classappend="${msg.tags}"
+       class="alert"
+       th:text="${msg.text}"></div>
+</th:block>
+
+<!-- Liste des virements récurrents -->
+<th:block th:if="${recurrents != null and !#lists.isEmpty(recurrents)}">
+<div class="row">
+  <div th:each="v : ${recurrents}" class="col-md-6 mb-4">
+    <div class="card"
+         th:style="'border-left: 3px solid ' + (${v.statut == 'actif'} ? 'var(--champagne)' : (${v.statut == 'pause'} ? 'var(--gray-mid)' : '#a93226')) + ' !important;'">
+
+      <div class="card-body" style="padding: 1.25rem 1.5rem;">
+
+        <!-- En-tête : montant + badge statut -->
+        <div style="display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 1rem;">
+          <div>
+            <p style="margin: 0; font-size: 0.68rem; color: var(--gray-mid); letter-spacing: 0.07em; text-transform: uppercase;">Montant</p>
+            <p style="margin: 0; font-family: 'Cormorant Garamond', serif; font-size: 1.6rem; font-weight: 700; color: var(--black); line-height: 1.1;">
+              <span th:text="${#numbers.formatInteger(v.montant, 0, 'DEFAULT')}"></span>
+              <span style="font-size: 0.9rem; color: var(--gray-mid);">FCFA</span>
+            </p>
+          </div>
+          <span th:style="'font-size: 0.68rem; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; padding: 0.3em 0.8em; border-radius: 20px; border: 1.5px solid ' + (${v.statut == 'actif'} ? 'var(--champagne); color: var(--champ-dark)' : (${v.statut == 'pause'} ? 'var(--gray-mid); color: var(--gray-mid)' : '#a93226; color: #a93226')) + ';'">
+            <i th:if="${v.statut == 'actif'}" class="fas fa-circle" style="font-size: 7px; margin-right: 4px;"></i>
+            <span th:text="${v.statutDisplay}"></span>
+          </span>
+        </div>
+
+        <!-- Détails -->
+        <div style="font-size: 0.83rem; color: var(--black); margin-bottom: 1rem;">
+          <div style="display: flex; gap: 6px; align-items: center; margin-bottom: 0.4rem;">
+            <i class="fas fa-arrow-right" style="color: var(--champagne); font-size: 10px; width: 14px;"></i>
+            <span style="color: var(--gray-mid);" th:text="${v.compteSource.numeroCompte}"></span>
+            <i class="fas fa-long-arrow-alt-right" style="color: var(--gray-mid); font-size: 10px;"></i>
+            <span style="color: var(--gray-mid);" th:text="${v.compteDestination.numeroCompte}"></span>
+          </div>
+          <div style="display: flex; gap: 6px; align-items: center; margin-bottom: 0.4rem;">
+            <i class="fas fa-redo" style="color: var(--champagne); font-size: 10px; width: 14px;"></i>
+            <span th:text="${v.frequenceDisplay}"></span>
+          </div>
+          <div style="display: flex; gap: 6px; align-items: center; margin-bottom: 0.4rem;">
+            <i class="fas fa-calendar-alt" style="color: var(--champagne); font-size: 10px; width: 14px;"></i>
+            <span>Prochaine exécution :
+              <strong th:text="${#temporals.format(v.prochaineExecution, 'dd/MM/yyyy')}"></strong>
+            </span>
+          </div>
+          <div th:if="${v.dateFin != null}" style="display: flex; gap: 6px; align-items: center;">
+            <i class="fas fa-calendar-times" style="color: var(--gray-mid); font-size: 10px; width: 14px;"></i>
+            <span style="color: var(--gray-mid);">
+              Fin : <span th:text="${#temporals.format(v.dateFin, 'dd/MM/yyyy')}"></span>
+            </span>
+          </div>
+          <div th:if="${v.motif != null and !v.motif.isEmpty()}"
+               style="display: flex; gap: 6px; align-items: center; margin-top: 0.4rem;">
+            <i class="fas fa-tag" style="color: var(--gray-mid); font-size: 10px; width: 14px;"></i>
+            <span style="color: var(--gray-mid);" th:text="${v.motif}"></span>
+          </div>
+        </div>
+
+        <!-- Actions (masquées si terminé) -->
+        <div th:if="${v.statut != 'termine'}"
+             style="display: flex; gap: 8px; border-top: 1px solid var(--gray-light); padding-top: 1rem;">
+
+          <!-- Toggle actif/pause -->
+          <form th:action="@{/virements-recurrents/{id}/toggle(id=${v.id})}" method="post" style="margin: 0;">
+            <button type="submit"
+              style="display: inline-flex; align-items: center; gap: 5px; padding: 0.38rem 0.85rem; background: transparent; border: 1.5px solid var(--gray-light); border-radius: var(--radius); font-size: 0.72rem; font-weight: 500; letter-spacing: 0.05em; text-transform: uppercase; cursor: pointer; color: var(--slate-dark); transition: all 0.2s;">
+              <th:block th:if="${v.statut == 'actif'}">
+                <i class="fas fa-pause" style="font-size: 10px;"></i> Pause
+              </th:block>
+              <th:block th:if="${v.statut != 'actif'}">
+                <i class="fas fa-play" style="font-size: 10px;"></i> Reprendre
+              </th:block>
+            </button>
+          </form>
+
+          <!-- Supprimer -->
+          <a th:href="@{/virements-recurrents/{id}/supprimer(id=${v.id})}"
+            style="display: inline-flex; align-items: center; gap: 5px; padding: 0.38rem 0.85rem; background: transparent; border: 1.5px solid #f0b8b3; border-radius: var(--radius); font-size: 0.72rem; font-weight: 500; letter-spacing: 0.05em; text-transform: uppercase; color: #a93226; text-decoration: none; transition: all 0.2s;"
+            onmouseover="this.style.background='#fdf0ef'"
+            onmouseout="this.style.background='transparent'">
+            <i class="fas fa-trash" style="font-size: 10px;"></i> Supprimer
+          </a>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+</th:block>
+
+<!-- Aucun virement -->
+<th:block th:if="${recurrents == null or #lists.isEmpty(recurrents)}">
+<div class="alert alert-info" style="display: flex; align-items: center; gap: 10px;">
+  <i class="fas fa-info-circle" style="font-size: 16px;"></i>
+  <span>
+    Aucun virement récurrent programmé.
+    <a th:href="@{/virements-recurrents/creer}" style="color: var(--champ-dark); font-weight: 500;">Créer le premier →</a>
+  </span>
+</div>
+</th:block>
+
+</th:block>
+</html>

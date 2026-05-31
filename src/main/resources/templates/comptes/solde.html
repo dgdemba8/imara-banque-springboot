@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org"
+               xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+               xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+               layout:decorate="~{base}">
+<head>
+    <title>Mes comptes — Imara Banque</title>
+</head>
+
+<th:block layout:fragment="content">
+
+<main class="container my-4">
+
+    <!-- Flash messages -->
+    <div th:if="${success}" class="alert alert-success alert-dismissible fade show">
+        <span th:text="${success}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    <div th:if="${erreur}" class="alert alert-danger alert-dismissible fade show">
+        <span th:text="${erreur}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <h2 class="mb-4" style="color: #2d3748;">💳 Mes Comptes</h2>
+
+    <!-- Cartes de compte -->
+    <div class="row g-3 mb-5">
+        <div th:each="compte : ${comptes}" class="col-md-6 col-lg-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header py-3"
+                     style="background-color: #2d3748; color: white; border-bottom: 3px solid #d4a843;">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="fw-bold" th:text="${compte.typeCompteDisplay}">Type</span>
+                        <span class="badge"
+                              style="background-color: #d4a843; color: #2d3748;"
+                              th:text="${compte.actif ? 'Actif' : 'Inactif'}">Actif</span>
+                    </div>
+                    <div class="small mt-1" style="color: #a0aec0;"
+                         th:text="${compte.numeroCompte}">N° compte</div>
+                </div>
+                <div class="card-body">
+                    <!-- Solde -->
+                    <div class="text-center my-3">
+                        <div class="small text-muted mb-1">Solde disponible</div>
+                        <div class="fw-bold" style="font-size: 1.8rem; color: #2d3748;">
+                            <span th:text="${#numbers.formatDecimal(compte.solde, 1, 'COMMA', 0, 'POINT') + ' FCFA'}"></span>
+                        </div>
+                    </div>
+
+                    <!-- Plafond -->
+                    <div class="d-flex justify-content-between small text-muted mb-3">
+                        <span>Plafond journalier :</span>
+                        <strong th:text="${compte.plafondVirement != null ?
+                            #numbers.formatDecimal(compte.plafondVirement, 1, 'COMMA', 0, 'POINT') + ' FCFA'
+                            : 'Illimité'}">
+                        </strong>
+                    </div>
+                </div>
+                <div class="card-footer bg-white border-0 pb-3">
+                    <div class="d-grid gap-2">
+                        <a th:href="@{/comptes/releve/{id}/pdf(id=${compte.id})}"
+                           class="btn btn-sm btn-outline-secondary">
+                            📄 Relevé PDF
+                        </a>
+                        <a th:href="@{/comptes/{id}/plafond(id=${compte.id})}"
+                           class="btn btn-sm btn-outline-warning">
+                            ⚙️ Modifier plafond
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section relevé PDF avancé -->
+    <div class="card border-0 shadow-sm mb-5">
+        <div class="card-header" style="background-color: #2d3748; color: #d4a843;">
+            <strong>📄 Générer un relevé PDF</strong>
+        </div>
+        <div class="card-body">
+            <form th:action="@{/comptes/releve/tous/pdf}" method="get"
+                  class="row g-3 align-items-end">
+                <div class="col-md-4">
+                    <label class="form-label small fw-semibold">Date début</label>
+                    <input type="date" name="dateDebut" class="form-control">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label small fw-semibold">Date fin</label>
+                    <input type="date" name="dateFin" class="form-control">
+                </div>
+                <div class="col-md-4 d-grid">
+                    <button type="submit" class="btn fw-bold"
+                            style="background-color: #d4a843; color: #2d3748; border: none;">
+                        Télécharger (tous comptes)
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Graphique évolution solde (30 jours) -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-header py-3"
+             style="background-color: #2d3748; color: white; border-bottom: 3px solid #d4a843;">
+            <strong>📈 Évolution du solde — 30 derniers jours</strong>
+        </div>
+        <div class="card-body">
+            <canvas id="soldeChart" style="max-height: 350px;"></canvas>
+        </div>
+    </div>
+
+</main>
+
+<!-- Modale inactivité -->
+<div id="inactivity-modal" class="modal fade" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-warning">
+                <h5 class="modal-title">⚠️ Session sur le point d'expirer</h5>
+            </div>
+            <div class="modal-body">Expiration dans <strong id="countdown">60</strong>s.</div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="resetTimer()">Rester connecté</button>
+                <a th:href="@{/auth/deconnexion}" class="btn btn-secondary">Déconnexion</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+<script th:inline="javascript">
+    /*
+     * graphiqueData est un objet JSON sérialisé côté contrôleur :
+     *   model.addAttribute("graphique_data", objectMapper.writeValueAsString(chartData));
+     * La syntaxe /*[[...]]*/ est l'interpolation Thymeleaf dans un bloc JS (th:inline="javascript").
+     */
+    const graphiqueData = /*[[${graphique_data}]]*/ '{}';
+    const data = typeof graphiqueData === 'string' ? JSON.parse(graphiqueData) : graphiqueData;
+
+    new Chart(document.getElementById('soldeChart').getContext('2d'), {
+        type: 'line',
+        data: data,
+        options: {
+            responsive: true,
+            interaction: { mode: 'index', intersect: false },
+            plugins: {
+                legend: { position: 'top' },
+                tooltip: {
+                    callbacks: {
+                        label: ctx => ctx.dataset.label + ' : ' +
+                               new Intl.NumberFormat('fr-FR').format(ctx.raw) + ' FCFA'
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    ticks: {
+                        callback: val => new Intl.NumberFormat('fr-FR').format(val) + ' F'
+                    }
+                }
+            }
+        }
+    });
+</script>
+
+<script th:inline="javascript">
+    const CSRF_TOKEN  = /*[[${_csrf.token}]]*/ '';
+    const CSRF_HEADER = /*[[${_csrf.headerName}]]*/ 'X-CSRF-TOKEN';
+    const URL_REFRESH = /*[[@{/auth/refresh-session}]]*/ '/auth/refresh-session';
+    const URL_LOGOUT  = /*[[@{/auth/deconnexion}]]*/ '/auth/deconnexion';
+
+    let inactiveDepuis = 0, countdown = 60, modalShown = false, modal;
+
+    function resetTimer() {
+        inactiveDepuis = 0;
+        if (modalShown) { if (modal) modal.hide(); modalShown = false; countdown = 60; refreshSession(); }
+    }
+
+    function refreshSession() {
+        const h = {}; h[CSRF_HEADER] = CSRF_TOKEN;
+        fetch(URL_REFRESH, { method: 'POST', headers: h });
+    }
+
+    ['mousemove', 'keydown', 'click', 'scroll'].forEach(e =>
+        document.addEventListener(e, resetTimer, { passive: true }));
+
+    setInterval(() => {
+        inactiveDepuis++;
+        if (inactiveDepuis >= 1740 && !modalShown) {
+            modal = new bootstrap.Modal(document.getElementById('inactivity-modal'));
+            modal.show(); modalShown = true;
+        }
+        if (modalShown) {
+            countdown--;
+            document.getElementById('countdown').textContent = Math.max(countdown, 0);
+            if (countdown <= 0) window.location.href = URL_LOGOUT;
+        }
+    }, 1000);
+</script>
+
+</th:block>
+</html>

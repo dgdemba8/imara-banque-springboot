@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{base}">
+
+<th:block layout:fragment="content">
+
+<div class="row mt-4">
+    <div class="col-12 d-flex align-items-center justify-content-between flex-wrap gap-2" style="margin-bottom: 0.5rem;">
+        <h2 style="margin: 0;">
+            <i class="fas fa-list-alt me-2" style="color: var(--champagne); font-size: 1.2rem;"></i>
+            Historique des Transactions
+        </h2>
+        <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="font-size: 0.78rem; color: var(--gray-mid);">
+                <!-- pluralisation manuelle : Spring ne fournit pas de filtre natif équivalent à |pluralize| -->
+                <span th:text="${nbResultats}">0</span>
+                <span th:text="${nbResultats > 1} ? ' résultats' : ' résultat'"></span>
+            </span>
+        </div>
+    </div>
+    <div class="col-12"><hr></div>
+</div>
+
+<!-- Messages Flash -->
+<th:block th:if="${flashMessages != null and !#lists.isEmpty(flashMessages)}">
+  <div th:each="msg : ${flashMessages}"
+       th:classappend="${msg.tags}"
+       class="alert"
+       th:text="${msg.text}"></div>
+</th:block>
+
+<!-- ── Filtres ──────────────────────────────────────────────────── -->
+<div class="card mb-4" style="border-left: 3px solid var(--champagne) !important;">
+    <div class="card-body" style="padding: 1.25rem 1.5rem;">
+        <form method="get" th:action="@{/historique}" id="filtreForm">
+            <div class="row g-3 align-items-end">
+
+                <!-- Compte -->
+                <div class="col-md-3">
+                    <label style="font-size: 0.72rem; color: var(--gray-mid); text-transform: uppercase; letter-spacing: 0.06em; display: block; margin-bottom: 4px;">
+                        <i class="fas fa-credit-card me-1" style="color: var(--champagne); font-size: 10px;"></i>
+                        Compte
+                    </label>
+                    <select name="compte" class="form-select form-select-sm" style="font-size: 0.82rem;">
+                        <option value="">Tous les comptes</option>
+                        <option th:each="c : ${comptes}"
+                                th:value="${c.id}"
+                                th:selected="${filtreCompte == c.id.toString()}"
+                                th:text="${c.numeroCompte + ' — ' + c.typeCompteDisplay}">
+                        </option>
+                    </select>
+                </div>
+
+                <!-- Type -->
+                <div class="col-md-2">
+                    <label style="font-size: 0.72rem; color: var(--gray-mid); text-transform: uppercase; letter-spacing: 0.06em; display: block; margin-bottom: 4px;">
+                        <i class="fas fa-tag me-1" style="color: var(--champagne); font-size: 10px;"></i>
+                        Type
+                    </label>
+                    <select name="type" class="form-select form-select-sm" style="font-size: 0.82rem;">
+                        <option value="">Tous</option>
+                        <option value="virement" th:selected="${filtreType == 'virement'}">Virement</option>
+                        <option value="depot"    th:selected="${filtreType == 'depot'}">Dépôt</option>
+                        <option value="retrait"  th:selected="${filtreType == 'retrait'}">Retrait</option>
+                    </select>
+                </div>
+
+                <!-- Date début -->
+                <div class="col-md-2">
+                    <label style="font-size: 0.72rem; color: var(--gray-mid); text-transform: uppercase; letter-spacing: 0.06em; display: block; margin-bottom: 4px;">
+                        <i class="fas fa-calendar me-1" style="color: var(--champagne); font-size: 10px;"></i>
+                        Du
+                    </label>
+                    <input type="date" name="dateDebut" class="form-control form-control-sm"
+                           th:value="${filtreDebut}" style="font-size: 0.82rem;">
+                </div>
+
+                <!-- Date fin -->
+                <div class="col-md-2">
+                    <label style="font-size: 0.72rem; color: var(--gray-mid); text-transform: uppercase; letter-spacing: 0.06em; display: block; margin-bottom: 4px;">
+                        <i class="fas fa-calendar me-1" style="color: var(--champagne); font-size: 10px;"></i>
+                        Au
+                    </label>
+                    <input type="date" name="dateFin" class="form-control form-control-sm"
+                           th:value="${filtreFin}" style="font-size: 0.82rem;">
+                </div>
+
+                <!-- Boutons -->
+                <div class="col-md-3 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary btn-sm"
+                        style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.78rem; flex: 1; justify-content: center;">
+                        <i class="fas fa-search" style="font-size: 10px;"></i>
+                        Filtrer
+                    </button>
+                    <a th:href="@{/historique}" class="btn btn-light btn-sm"
+                        style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.78rem; white-space: nowrap;">
+                        <i class="fas fa-times" style="font-size: 10px;"></i>
+                        Réinitialiser
+                    </a>
+                </div>
+
+            </div>
+
+            <!-- Raccourcis période -->
+            <div style="display: flex; gap: 6px; margin-top: 0.75rem; flex-wrap: wrap;">
+                <span style="font-size: 0.7rem; color: var(--gray-mid); align-self: center;">Période rapide :</span>
+                <button type="button" class="btn btn-light btn-sm" style="font-size: 0.68rem; padding: 0.15rem 0.55rem;" onclick="setRapide(7)">7 jours</button>
+                <button type="button" class="btn btn-light btn-sm" style="font-size: 0.68rem; padding: 0.15rem 0.55rem;" onclick="setRapide(30)">30 jours</button>
+                <button type="button" class="btn btn-light btn-sm" style="font-size: 0.68rem; padding: 0.15rem 0.55rem;" onclick="setRapide(90)">3 mois</button>
+                <button type="button" class="btn btn-light btn-sm" style="font-size: 0.68rem; padding: 0.15rem 0.55rem;" onclick="setRapide(365)">1 an</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ── Tableau ───────────────────────────────────────────────────── -->
+<th:block th:if="${transactions != null and !#lists.isEmpty(transactions)}">
+<div class="table-responsive">
+    <table class="table table-hover" style="font-size: 0.85rem;">
+        <thead>
+            <tr style="background: #2d3748; color: #fff;">
+                <th style="padding: 0.75rem 1rem; font-weight: 500; font-size: 0.75rem; letter-spacing: 0.05em; border: none;">DATE</th>
+                <th style="padding: 0.75rem 1rem; font-weight: 500; font-size: 0.75rem; letter-spacing: 0.05em; border: none;">TYPE</th>
+                <th style="padding: 0.75rem 1rem; font-weight: 500; font-size: 0.75rem; letter-spacing: 0.05em; border: none;">MONTANT</th>
+                <th style="padding: 0.75rem 1rem; font-weight: 500; font-size: 0.75rem; letter-spacing: 0.05em; border: none;">SOURCE</th>
+                <th style="padding: 0.75rem 1rem; font-weight: 500; font-size: 0.75rem; letter-spacing: 0.05em; border: none;">DESTINATION</th>
+                <th style="padding: 0.75rem 1rem; font-weight: 500; font-size: 0.75rem; letter-spacing: 0.05em; border: none;">MOTIF</th>
+                <th style="padding: 0.75rem 1rem; font-weight: 500; font-size: 0.75rem; letter-spacing: 0.05em; border: none;">STATUT</th>
+                <th style="padding: 0.75rem 1rem; font-weight: 500; font-size: 0.75rem; letter-spacing: 0.05em; border: none;">ACTION</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="t : ${transactions}"
+                th:style="${t.annule} ? 'border-bottom: 1px solid var(--gray-light); opacity: 0.6;' : 'border-bottom: 1px solid var(--gray-light);'">
+
+                <td style="padding: 0.75rem 1rem; color: var(--gray-mid); white-space: nowrap;">
+                    <span th:text="${#temporals.format(t.dateTransaction, 'dd/MM/yyyy')}"></span><br>
+                    <span style="font-size: 0.72rem;" th:text="${#temporals.format(t.dateTransaction, 'HH:mm')}"></span>
+                </td>
+
+                <td style="padding: 0.75rem 1rem;">
+                    <span th:if="${t.typeTransaction == 'virement'}"
+                          style="display: inline-flex; align-items: center; gap: 5px; font-size: 0.72rem; font-weight: 500; color: #2d3748;">
+                        <i class="fas fa-exchange-alt" style="color: var(--champagne); font-size: 10px;"></i>
+                        Virement
+                    </span>
+                    <span th:if="${t.typeTransaction == 'depot'}"
+                          style="display: inline-flex; align-items: center; gap: 5px; font-size: 0.72rem; font-weight: 500; color: #2f855a;">
+                        <i class="fas fa-arrow-down" style="font-size: 10px;"></i>
+                        Dépôt
+                    </span>
+                    <span th:if="${t.typeTransaction == 'retrait'}"
+                          style="display: inline-flex; align-items: center; gap: 5px; font-size: 0.72rem; font-weight: 500; color: #a93226;">
+                        <i class="fas fa-arrow-up" style="font-size: 10px;"></i>
+                        Retrait
+                    </span>
+                </td>
+
+                <td th:style="'padding: 0.75rem 1rem; font-weight: 600; white-space: nowrap; color: ' + (${t.annule} ? 'var(--gray-mid)' : (${t.typeTransaction == 'depot'} ? '#2f855a' : '#2d3748')) + '; ' + (${t.annule} ? 'text-decoration: line-through;' : '')">
+                    <span th:text="${#numbers.formatInteger(t.montant, 0, 'DEFAULT')}"></span> FCFA
+                </td>
+
+                <td style="padding: 0.75rem 1rem; font-size: 0.78rem; color: var(--gray-mid);"
+                    th:text="${t.compteSource.numeroCompte}"></td>
+
+                <td style="padding: 0.75rem 1rem; font-size: 0.78rem; color: var(--gray-mid);"
+                    th:text="${t.compteDestination != null ? t.compteDestination.numeroCompte : '—'}"></td>
+
+                <td style="padding: 0.75rem 1rem; font-size: 0.78rem; color: var(--gray-mid); max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"
+                    th:text="${t.motif != null ? t.motif : '—'}"></td>
+
+                <td style="padding: 0.75rem 1rem;">
+                    <span th:if="${t.annule}"
+                          class="badge" style="background: #f0b8b3; color: #a93226; font-size: 0.68rem;">Annulé</span>
+                    <span th:if="${!t.annule and t.statut}"
+                          class="badge" style="background: #c6f6d5; color: #276749; font-size: 0.68rem;">Succès</span>
+                    <span th:if="${!t.annule and !t.statut}"
+                          class="badge" style="background: #fed7d7; color: #a93226; font-size: 0.68rem;">Échec</span>
+                </td>
+
+                <!-- Colonne Action -->
+                <td style="padding: 0.75rem 1rem;">
+                    <a th:if="${t.peutAnnuler}"
+                       th:href="@{/transactions/{id}/annuler(id=${t.id})}"
+                       style="display: inline-flex; align-items: center; gap: 5px; padding: 0.28rem 0.65rem; border: 1.5px solid #f0b8b3; border-radius: 4px; color: #a93226; font-size: 0.7rem; font-weight: 500; text-decoration: none; white-space: nowrap; transition: all 0.2s;"
+                       onmouseover="this.style.background='#fdf0ef'"
+                       onmouseout="this.style.background='transparent'">
+                        <i class="fas fa-undo" style="font-size: 9px;"></i>
+                        Annuler
+                        <!-- id unique pour le compte à rebours JS -->
+                        <span style="font-size: 0.65rem; color: #c0534a;"
+                              th:id="'timer-' + ${t.id}"
+                              th:attr="data-secondes=${t.secondesAvantExpiration}"></span>
+                    </a>
+                    <span th:if="${!t.peutAnnuler}" style="color: var(--gray-light); font-size: 0.72rem;">—</span>
+                </td>
+
+            </tr>
+        </tbody>
+    </table>
+</div>
+</th:block>
+
+<th:block th:if="${transactions == null or #lists.isEmpty(transactions)}">
+<div class="alert alert-info" style="display: flex; align-items: center; gap: 10px;">
+    <i class="fas fa-info-circle" style="font-size: 16px;"></i>
+    <span>Aucune transaction trouvée
+        <th:block th:if="${filtreType != null or filtreCompte != null or filtreDebut != null or filtreFin != null}">
+            pour ces critères.
+            <a th:href="@{/historique}" style="color: var(--champ-dark);">Réinitialiser les filtres →</a>
+        </th:block>
+    </span>
+</div>
+</th:block>
+
+<script th:inline="none">
+// ── Raccourcis période ──────────────────────────────────────────
+function setRapide(jours) {
+    var today = new Date();
+    var debut = new Date();
+    debut.setDate(debut.getDate() - jours);
+    var fmt = function(d) {
+        return d.getFullYear() + '-' +
+               String(d.getMonth()+1).padStart(2,'0') + '-' +
+               String(d.getDate()).padStart(2,'0');
+    };
+    document.querySelector('[name="dateDebut"]').value = fmt(debut);
+    document.querySelector('[name="dateFin"]').value   = fmt(today);
+    document.getElementById('filtreForm').submit();
+}
+
+// ── Comptes à rebours sur les boutons Annuler ───────────────────
+// Les secondes sont lues depuis data-secondes pour éviter l'inline Thymeleaf dans les boucles JS
+document.querySelectorAll('[id^="timer-"]').forEach(function(el) {
+    var secondes = parseInt(el.getAttribute('data-secondes'), 10);
+    if (isNaN(secondes)) return;
+
+    (function() {
+        function tick() {
+            if (secondes <= 0) {
+                window.location.reload();
+                return;
+            }
+            var m = Math.floor(secondes / 60);
+            var s = secondes % 60;
+            el.textContent = '(' + (m > 0 ? m + 'm' + (s < 10 ? '0'+s : s) + 's' : s + 's') + ')';
+            if (secondes <= 60) el.style.color = '#a93226';
+            secondes--;
+            setTimeout(tick, 1000);
+        }
+        tick();
+    })();
+});
+</script>
+
+</th:block>
+</html>

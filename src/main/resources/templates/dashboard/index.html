@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Imara Banque — Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0d0f14;
+      --surface:   #13161e;
+      --surface2:  #1a1e28;
+      --border:    rgba(255,255,255,0.06);
+      --gold:      #c9a84c;
+      --gold-light:#e8c97a;
+      --gold-dim:  rgba(201,168,76,0.15);
+      --text:      #e8e4dc;
+      --text-muted:#7a7a8a;
+      --green:     #4caf87;
+      --red:       #e05c5c;
+      --blue:      #5c9be0;
+    }
+
+    html { font-size: 16px; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 300;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      position: fixed;
+      left: 0; top: 0;
+      width: 240px;
+      height: 100vh;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      padding: 2rem 0;
+      z-index: 100;
+    }
+
+    .logo {
+      padding: 0 1.75rem 2.5rem;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 2rem;
+    }
+    .logo-mark {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.6rem;
+      font-weight: 600;
+      color: var(--gold);
+      letter-spacing: 0.04em;
+    }
+    .logo-sub {
+      font-size: 0.65rem;
+      color: var(--text-muted);
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      margin-top: 2px;
+    }
+
+    nav { flex: 1; padding: 0 0.75rem; }
+    .nav-group-label {
+      font-size: 0.6rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      padding: 0 1rem;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.65rem 1rem;
+      border-radius: 8px;
+      text-decoration: none;
+      color: var(--text-muted);
+      font-size: 0.875rem;
+      font-weight: 400;
+      transition: all 0.2s;
+      cursor: pointer;
+      margin-bottom: 2px;
+    }
+    .nav-item:hover { background: var(--surface2); color: var(--text); }
+    .nav-item.active {
+      background: var(--gold-dim);
+      color: var(--gold-light);
+      border: 1px solid rgba(201,168,76,0.25);
+    }
+    .nav-icon {
+      width: 18px; height: 18px;
+      opacity: 0.8;
+      flex-shrink: 0;
+    }
+
+    .sidebar-footer {
+      padding: 1.5rem 1.75rem;
+      border-top: 1px solid var(--border);
+    }
+    .user-chip {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .avatar {
+      width: 34px; height: 34px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--gold) 0%, #8b6914 100%);
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #0d0f14;
+      flex-shrink: 0;
+    }
+    .user-info {}
+    .user-name { font-size: 0.8rem; font-weight: 500; color: var(--text); }
+    .user-role { font-size: 0.65rem; color: var(--text-muted); margin-top: 1px; }
+
+    /* ── Main ── */
+    .main {
+      margin-left: 240px;
+      min-height: 100vh;
+      padding: 2.5rem 2.5rem 4rem;
+    }
+
+    /* ── Header ── */
+    .page-header {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      margin-bottom: 2.5rem;
+      padding-bottom: 2rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .greeting-eyebrow {
+      font-size: 0.7rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 0.35rem;
+    }
+    .greeting-name {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 2.4rem;
+      font-weight: 300;
+      color: var(--text);
+      line-height: 1;
+    }
+    .greeting-name span { color: var(--gold); font-weight: 500; }
+    .header-date {
+      text-align: right;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      line-height: 1.7;
+    }
+    .header-date strong { display: block; color: var(--text); font-size: 0.85rem; font-weight: 500; }
+
+    /* ── Cards grid ── */
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.25rem;
+      margin-bottom: 2rem;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1.75rem;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.25s, border-color 0.25s;
+      text-decoration: none;
+      display: block;
+      color: inherit;
+    }
+    .card:hover {
+      transform: translateY(-3px);
+      border-color: rgba(201,168,76,0.3);
+    }
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--gold), transparent);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .card:hover::before { opacity: 1; }
+
+    .card-icon {
+      width: 42px; height: 42px;
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 1.25rem;
+      font-size: 1.2rem;
+    }
+    .card-icon.gold { background: var(--gold-dim); }
+    .card-icon.blue { background: rgba(92,155,224,0.12); }
+    .card-icon.green { background: rgba(76,175,135,0.12); }
+
+    .card-label {
+      font-size: 0.65rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 0.4rem;
+    }
+    .card-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.3rem;
+      font-weight: 500;
+      color: var(--text);
+      margin-bottom: 0.5rem;
+    }
+    .card-desc {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+    .card-arrow {
+      position: absolute;
+      right: 1.75rem;
+      bottom: 1.75rem;
+      color: var(--gold);
+      font-size: 1rem;
+      opacity: 0;
+      transform: translateX(-4px);
+      transition: all 0.25s;
+    }
+    .card:hover .card-arrow { opacity: 1; transform: translateX(0); }
+
+    /* ── Account summary ── */
+    .section-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.15rem;
+      font-weight: 500;
+      color: var(--text);
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .section-title::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; margin-bottom: 2rem; }
+
+    .account-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1.75rem;
+    }
+    .account-type {
+      font-size: 0.65rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 0.3rem;
+    }
+    .account-number {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      margin-bottom: 1.25rem;
+      font-family: 'DM Sans', monospace;
+    }
+    .account-balance {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 2.1rem;
+      font-weight: 400;
+      color: var(--text);
+      margin-bottom: 0.25rem;
+    }
+    .account-balance .currency {
+      font-size: 1.1rem;
+      color: var(--gold);
+      margin-right: 0.3rem;
+    }
+    .account-change {
+      font-size: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      margin-top: 0.75rem;
+    }
+    .change-pos { color: var(--green); }
+    .change-neg { color: var(--red); }
+
+    .account-actions {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 1.5rem;
+      padding-top: 1.25rem;
+      border-top: 1px solid var(--border);
+    }
+    .btn-sm {
+      padding: 0.4rem 0.9rem;
+      border-radius: 6px;
+      font-size: 0.72rem;
+      font-weight: 500;
+      cursor: pointer;
+      text-decoration: none;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      background: transparent;
+      transition: all 0.2s;
+      letter-spacing: 0.05em;
+    }
+    .btn-sm:hover { border-color: var(--gold); color: var(--gold-light); }
+    .btn-sm.primary {
+      background: var(--gold-dim);
+      border-color: rgba(201,168,76,0.35);
+      color: var(--gold-light);
+    }
+    .btn-sm.primary:hover { background: rgba(201,168,76,0.25); }
+
+    /* ── Quick actions ── */
+    .quick-actions {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1.75rem;
+    }
+    .quick-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.75rem;
+      margin-top: 1rem;
+    }
+    .quick-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 1.1rem 0.75rem;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--surface2);
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+    .quick-btn:hover {
+      border-color: rgba(201,168,76,0.3);
+      background: var(--gold-dim);
+    }
+    .quick-btn-icon { font-size: 1.3rem; }
+    .quick-btn-label {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      text-align: center;
+      line-height: 1.4;
+    }
+    .quick-btn:hover .quick-btn-label { color: var(--gold-light); }
+
+    /* ── Recent transactions ── */
+    .transactions-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1.75rem;
+    }
+    .tx-list { margin-top: 1rem; }
+    .tx-item {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 0.9rem 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .tx-item:last-child { border-bottom: none; }
+    .tx-dot {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.9rem;
+      flex-shrink: 0;
+    }
+    .tx-dot.out { background: rgba(224,92,92,0.12); }
+    .tx-dot.in  { background: rgba(76,175,135,0.12); }
+    .tx-info { flex: 1; }
+    .tx-name { font-size: 0.82rem; font-weight: 500; color: var(--text); }
+    .tx-date { font-size: 0.7rem; color: var(--text-muted); margin-top: 2px; }
+    .tx-amount { font-family: 'Cormorant Garamond', serif; font-size: 1rem; font-weight: 500; }
+    .tx-amount.out { color: var(--red); }
+    .tx-amount.in  { color: var(--green); }
+
+    /* ── Animations ── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .cards-grid .card, .account-card, .quick-actions, .transactions-card {
+      animation: fadeUp 0.5s ease both;
+    }
+    .cards-grid .card:nth-child(1) { animation-delay: 0.05s; }
+    .cards-grid .card:nth-child(2) { animation-delay: 0.12s; }
+    .cards-grid .card:nth-child(3) { animation-delay: 0.19s; }
+    .account-card:nth-child(1)     { animation-delay: 0.25s; }
+    .account-card:nth-child(2)     { animation-delay: 0.3s; }
+    .quick-actions                 { animation-delay: 0.35s; }
+    .transactions-card             { animation-delay: 0.38s; }
+
+    /* ── Status badge ── */
+    .badge {
+      display: inline-block;
+      padding: 0.15rem 0.55rem;
+      border-radius: 4px;
+      font-size: 0.6rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      font-weight: 500;
+    }
+    .badge-active { background: rgba(76,175,135,0.15); color: var(--green); }
+
+    /* ── Scrollbar ── */
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════ SIDEBAR ═══════════ -->
+<aside class="sidebar">
+  <div class="logo">
+    <div class="logo-mark">Imara</div>
+    <div class="logo-sub">Banque Sécurisée</div>
+  </div>
+
+  <nav>
+    <div class="nav-group-label">Espace client</div>
+
+    <a href="/dashboard/" class="nav-item active">
+      <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <rect x="3" y="3" width="7" height="7" rx="1.5" stroke-width="1.5"/>
+        <rect x="14" y="3" width="7" height="7" rx="1.5" stroke-width="1.5"/>
+        <rect x="3" y="14" width="7" height="7" rx="1.5" stroke-width="1.5"/>
+        <rect x="14" y="14" width="7" height="7" rx="1.5" stroke-width="1.5"/>
+      </svg>
+      Tableau de bord
+    </a>
+
+    <a href="/comptes/solde" class="nav-item">
+      <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path d="M3 9a2 2 0 012-2h14a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" stroke-width="1.5"/>
+        <path d="M3 9l9-6 9 6" stroke-width="1.5"/>
+        <circle cx="12" cy="14" r="2" stroke-width="1.5"/>
+      </svg>
+      Mes Comptes
+    </a>
+
+    <div class="nav-group-label">Transactions</div>
+
+    <a href="/transactions/virement" class="nav-item">
+      <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path d="M5 12h14M14 6l6 6-6 6" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Nouveau virement
+    </a>
+
+    <a href="/transactions/historique" class="nav-item">
+      <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path d="M12 8v4l3 3M12 2a10 10 0 100 20A10 10 0 0012 2z" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+      Historique
+    </a>
+
+    <a href="/transactions/virements-recurrents" class="nav-item">
+      <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+      Virements récurrents
+    </a>
+
+    <div class="nav-group-label">Sécurité</div>
+
+    <a href="/journal/journal" class="nav-item">
+      <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path d="M9 12h6M9 16h6M7 4H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V6a2 2 0 00-2-2h-2M9 4a2 2 0 002 2h2a2 2 0 002-2M9 4a2 2 0 012-2h2a2 2 0 012 2" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+      Journal de connexions
+    </a>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="user-chip">
+      <div class="avatar">A</div>
+      <div class="user-info">
+        <div class="user-name" th:text="${user?.firstName + ' ' + user?.lastName}">Alpha Diop</div>
+        <div class="user-role">Client Premium <span class="badge badge-active">Actif</span></div>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<!-- ═══════════ MAIN ═══════════ -->
+<main class="main">
+
+  <!-- Header -->
+  <div class="page-header">
+    <div>
+      <div class="greeting-eyebrow">Bienvenue dans votre espace sécurisé</div>
+      <h1 class="greeting-name">
+        Bonjour, <span th:text="${user?.firstName}">Alpha</span>
+      </h1>
+    </div>
+    <div class="header-date">
+      <strong id="date-display"></strong>
+      <span id="time-display"></span>
+    </div>
+  </div>
+
+  <!-- Feature cards -->
+  <div class="cards-grid">
+    <a href="/comptes/solde" class="card">
+      <div class="card-icon gold">🏦</div>
+      <div class="card-label">Gestion</div>
+      <div class="card-title">Mes Comptes</div>
+      <div class="card-desc">Consultez vos soldes et téléchargez vos relevés PDF</div>
+      <div class="card-arrow">→</div>
+    </a>
+
+    <a href="/transactions/historique" class="card">
+      <div class="card-icon blue">💸</div>
+      <div class="card-label">Opérations</div>
+      <div class="card-title">Transactions</div>
+      <div class="card-desc">Virements, historique complet et virements récurrents</div>
+      <div class="card-arrow">→</div>
+    </a>
+
+    <a href="/journal/journal" class="card">
+      <div class="card-icon green">📋</div>
+      <div class="card-label">Traçabilité</div>
+      <div class="card-title">Journal</div>
+      <div class="card-desc">Historique et surveillance de vos connexions</div>
+      <div class="card-arrow">→</div>
+    </a>
+  </div>
+
+  <!-- Two-col layout -->
+  <div class="two-col">
+
+    <!-- Account overview (gauche) -->
+    <div>
+      <div class="section-title">Aperçu des comptes</div>
+      <div style="display:flex; flex-direction:column; gap:1rem;">
+
+        <div class="account-card">
+          <div class="account-type">Compte Courant</div>
+          <div class="account-number">FR76 •••• •••• •••• 4821</div>
+          <div class="account-balance">
+            <span class="currency">XOF</span>
+            <span th:text="${comptes != null && comptes.size() > 0 ? #numbers.formatDecimal(comptes[0].solde, 1, 'COMMA', 2, 'POINT') : '—'}">150 000,00</span>
+          </div>
+          <div class="account-change change-pos">↑ +12 500 XOF ce mois</div>
+          <div class="account-actions">
+            <a href="/transactions/virement" class="btn-sm primary">Virer</a>
+            <a href="/comptes/solde" class="btn-sm">Relevé PDF</a>
+            <a href="/transactions/historique" class="btn-sm">Historique</a>
+          </div>
+        </div>
+
+        <div class="account-card" th:if="${comptes != null && comptes.size() > 1}">
+          <div class="account-type">Compte Épargne</div>
+          <div class="account-number">FR76 •••• •••• •••• 7103</div>
+          <div class="account-balance">
+            <span class="currency">XOF</span>
+            <span th:text="${#numbers.formatDecimal(comptes[1].solde, 1, 'COMMA', 2, 'POINT')}">500 000,00</span>
+          </div>
+          <div class="account-change change-pos">↑ +3,5% rendement annuel</div>
+          <div class="account-actions">
+            <a href="/comptes/solde" class="btn-sm primary">Détails</a>
+            <a href="/comptes/solde" class="btn-sm">Relevé PDF</a>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Right col -->
+    <div style="display:flex; flex-direction:column; gap:1.25rem;">
+
+      <!-- Quick actions -->
+      <div class="quick-actions">
+        <div class="section-title">Actions rapides</div>
+        <div class="quick-grid">
+          <a href="/transactions/virement" class="quick-btn">
+            <span class="quick-btn-icon">⚡</span>
+            <span class="quick-btn-label">Nouveau virement</span>
+          </a>
+          <a href="/transactions/virements-recurrents" class="quick-btn">
+            <span class="quick-btn-icon">🔄</span>
+            <span class="quick-btn-label">Virements récurrents</span>
+          </a>
+          <a href="/comptes/solde" class="quick-btn">
+            <span class="quick-btn-icon">📄</span>
+            <span class="quick-btn-label">Relevé PDF global</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Recent transactions -->
+      <div class="transactions-card" style="flex:1">
+        <div class="section-title">Dernières opérations</div>
+        <div class="tx-list">
+
+          <div class="tx-item" th:each="tx, iter : ${dernieresTransactions}" th:if="${iter.index < 5}">
+            <div class="tx-dot" th:classappend="${tx.montant < 0} ? 'out' : 'in'">
+              <span th:text="${tx.montant < 0} ? '↑' : '↓'">↑</span>
+            </div>
+            <div class="tx-info">
+              <div class="tx-name" th:text="${tx.description ?: 'Virement'}">Virement</div>
+              <div class="tx-date" th:text="${#temporals.format(tx.dateTransaction, 'dd MMM yyyy')}">28 Mai 2026</div>
+            </div>
+            <div class="tx-amount" th:classappend="${tx.montant < 0} ? 'out' : 'in'"
+                 th:text="${(tx.montant < 0 ? '- ' : '+ ') + #numbers.formatDecimal(tx.montant < 0 ? -tx.montant : tx.montant, 1, 'COMMA', 0, 'POINT') + ' XOF'}">
+              − 25 000 XOF
+            </div>
+          </div>
+
+          <!-- Fallback si pas de transactions -->
+          <div th:if="${dernieresTransactions == null || dernieresTransactions.empty}">
+            <div class="tx-item">
+              <div class="tx-dot in">↓</div>
+              <div class="tx-info">
+                <div class="tx-name">Dépôt initial</div>
+                <div class="tx-date">01 Jan 2026</div>
+              </div>
+              <div class="tx-amount in">+ 150 000 XOF</div>
+            </div>
+            <div class="tx-item">
+              <div class="tx-dot out">↑</div>
+              <div class="tx-info">
+                <div class="tx-name">Virement externe</div>
+                <div class="tx-date">15 Jan 2026</div>
+              </div>
+              <div class="tx-amount out">− 25 000 XOF</div>
+            </div>
+          </div>
+
+        </div>
+        <div style="margin-top:1rem; text-align:right;">
+          <a href="/transactions/historique" class="btn-sm">Voir tout →</a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</main>
+
+<script>
+  function updateDateTime() {
+    const now = new Date();
+    const dateOpts = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' };
+    const timeOpts = { hour: '2-digit', minute: '2-digit' };
+    const dateEl = document.getElementById('date-display');
+    const timeEl = document.getElementById('time-display');
+    if (dateEl) dateEl.textContent = now.toLocaleDateString('fr-FR', dateOpts);
+    if (timeEl) timeEl.textContent = now.toLocaleTimeString('fr-FR', timeOpts);
+  }
+  updateDateTime();
+  setInterval(updateDateTime, 30000);
+</script>
+
+</body>
+</html>

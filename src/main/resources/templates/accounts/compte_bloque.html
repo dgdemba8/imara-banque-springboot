@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Compte bloqué — Imara Banque</title>
+    <link rel="stylesheet" th:href="@{/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body style="background-color: #f7f5f0; min-height: 100vh;">
+
+<div class="d-flex align-items-center justify-content-center" style="min-height: 100vh;">
+    <div class="card shadow-lg border-0" style="max-width: 460px; width: 100%;">
+
+        <div class="card-header text-center py-4"
+             style="background-color: #742a2a; border-bottom: 3px solid #d4a843;">
+            <img th:src="@{/images/logo.png}" alt="Logo" height="50" class="mb-2">
+            <h4 style="font-family: Georgia, serif; font-style: italic; color: #d4a843; margin: 0;">
+                Imara Banque
+            </h4>
+        </div>
+
+        <div class="card-body p-4 text-center">
+            <div style="font-size: 3rem;" class="mb-3">🔒</div>
+            <h5 class="text-danger fw-bold mb-2">Accès temporairement bloqué</h5>
+
+            <p class="text-muted mb-1">
+                Le compte
+                <strong th:text="${username}" style="color: #2d3748;">utilisateur</strong>
+                a été bloqué suite à trop de tentatives de connexion échouées.
+            </p>
+
+            <!-- Compte à rebours -->
+            <div class="my-4 p-3 rounded"
+                 style="background-color: #fff5f5; border: 2px solid #fc8181;">
+                <p class="mb-1 small text-muted">Déblocage automatique dans :</p>
+                <div id="timer" class="fw-bold"
+                     style="font-size: 2rem; color: #c53030; font-family: monospace;">
+                    <!-- Équivalent du timer Django (secondes depuis la session) -->
+                    <span id="minutes">00</span>:<span id="secondes">00</span>
+                </div>
+            </div>
+
+            <p class="small text-muted">
+                Si vous pensez qu'il s'agit d'une erreur, contactez votre conseiller bancaire.
+            </p>
+
+            <a th:href="@{/auth/}" class="btn btn-outline-secondary btn-sm mt-2">
+                ← Retour à la connexion
+            </a>
+        </div>
+    </div>
+</div>
+
+<script th:src="@{/js/bootstrap.bundle.min.js}"></script>
+<script th:inline="javascript">
+    // secondes transmises depuis le contrôleur (équivalent session['bloque_secondes'] Django)
+    let secondesRestantes = /*[[${secondes}]]*/ 900;
+
+    function mettreAJourTimer() {
+        const mins = Math.floor(secondesRestantes / 60);
+        const secs = secondesRestantes % 60;
+        document.getElementById('minutes').textContent  = String(mins).padStart(2, '0');
+        document.getElementById('secondes').textContent = String(secs).padStart(2, '0');
+
+        if (secondesRestantes <= 0) {
+            clearInterval(interval);
+            document.getElementById('timer').innerHTML =
+                '<span class="text-success">Déblocage en cours...</span>';
+            // Rediriger automatiquement vers la connexion
+            setTimeout(() => window.location.href = /*[[@{/auth/}]]*/ '/auth/', 1500);
+        }
+        secondesRestantes--;
+    }
+
+    mettreAJourTimer();
+    const interval = setInterval(mettreAJourTimer, 1000);
+</script>
+</body>
+</html>

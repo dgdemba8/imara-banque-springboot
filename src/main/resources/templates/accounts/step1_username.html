@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connexion — Imara Banque</title>
+    <link rel="stylesheet" th:href="@{/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body style="background-color: #f7f5f0; min-height: 100vh;">
+
+<div class="d-flex align-items-center justify-content-center" style="min-height: 100vh;">
+    <div class="card shadow-lg border-0" style="max-width: 420px; width: 100%;">
+
+        <!-- En-tête carte -->
+        <div class="card-header text-center py-4"
+             style="background-color: #2d3748; border-bottom: 3px solid #d4a843;">
+            <img th:src="@{/images/logo.png}" alt="Logo" height="55" class="mb-2">
+            <h4 style="font-family: Georgia, serif; font-style: italic; color: #d4a843; margin: 0;">
+                Imara Banque
+            </h4>
+            <small style="color: #a0aec0; font-size: 0.75rem; letter-spacing: 1px;">
+                ESPACE CLIENT SÉCURISÉ
+            </small>
+        </div>
+
+        <div class="card-body p-4">
+            <h5 class="text-center mb-4" style="color: #2d3748;">Connexion — Étape 1/2</h5>
+            <p class="text-muted text-center small mb-4">Saisissez votre identifiant</p>
+
+            <!-- Message d'erreur -->
+            <div th:if="${erreur}" class="alert alert-danger py-2 small" th:text="${erreur}"></div>
+
+            <!-- Message session expirée -->
+            <div th:if="${param.expired}" class="alert alert-warning py-2 small">
+                Votre session a expiré. Veuillez vous reconnecter.
+            </div>
+
+            <!-- Formulaire -->
+            <!--
+                action="@{/auth/}" → POST /auth/
+                Équivalent Django : request.method == 'POST' dans etape1_username
+            -->
+            <form th:action="@{/auth/}" method="post">
+                <!-- Token CSRF Spring Security (équivalent {% csrf_token %} Django) -->
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+
+                <div class="mb-3">
+                    <label for="username" class="form-label fw-semibold">
+                        Identifiant
+                    </label>
+                    <input type="text"
+                           id="username"
+                           name="username"
+                           class="form-control form-control-lg"
+                           placeholder="Votre identifiant"
+                           autocomplete="username"
+                           autofocus
+                           required>
+                </div>
+
+                <button type="submit"
+                        class="btn btn-lg w-100 fw-bold"
+                        style="background-color: #d4a843; color: #2d3748; border: none;">
+                    Continuer →
+                </button>
+            </form>
+        </div>
+
+        <div class="card-footer text-center py-3" style="background-color: #f7f5f0;">
+            <small class="text-muted">
+                🔒 Connexion sécurisée — Imara Banque
+            </small>
+        </div>
+    </div>
+</div>
+
+<script th:src="@{/js/bootstrap.bundle.min.js}"></script>
+</body>
+</html>
