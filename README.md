@@ -2,30 +2,6 @@
 
 Conversion complète du projet Django vers Spring Boot 3.3 / Java 21.
 
-## Correspondance Django → Spring Boot
-
-| Django | Spring Boot |
-|--------|-------------|
-| `models.py` | Entités JPA (`model/`) |
-| `views.py` | Controllers (`controller/`) |
-| `urls.py` | `@RequestMapping` dans les controllers |
-| `forms.py` | Validation Bean Validation (`@Valid`) |
-| `apps/*/migrations/` | Hibernate DDL (`spring.jpa.hibernate.ddl-auto`) |
-| `config/settings.py` | `application.properties` |
-| `django.contrib.auth` | Spring Security + `UserDetailsService` |
-| `@login_required` | `.anyRequest().authenticated()` (Spring Security) |
-| `send_mail()` | `JavaMailSender` dans `EmailService` |
-| `Celery Beat + tasks.py` | `@Scheduled` dans `VirementRecurrentScheduler` |
-| `request.session` | `HttpSession` Spring |
-| `messages.success/error` | `RedirectAttributes` (flash attributes) |
-| Templates Django | Templates Thymeleaf |
-| `{% url 'name' %}` | `@{/chemin/}` Thymeleaf |
-| `{{ variable }}` | `${variable}` Thymeleaf |
-| `{% if %}` | `th:if` Thymeleaf |
-| `{% for %}` | `th:each` Thymeleaf |
-| ReportLab (PDF) | iText 8 |
-
----
 
 ## Structure du projet
 
