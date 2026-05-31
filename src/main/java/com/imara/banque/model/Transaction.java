@@ -77,8 +77,6 @@ public class Transaction {
         this.dateTransaction = LocalDateTime.now();
     }
 
-    // ── Propriétés calculées ───────────────────────────────────────────────
-
     /**
      * True si la transaction peut encore être annulée.
      * Équivalent de {@code annulable} (property Django).

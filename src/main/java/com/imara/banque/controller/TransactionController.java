@@ -19,19 +19,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
-/**
- * Contrôleur des transactions.
- *
- * Équivalent de {@code apps/transactions/views.py} Django :
- *   historique()                  → GET  /transactions/
- *   virement()                    → GET/POST /transactions/virement/
- *   annuler_virement()            → GET/POST /transactions/annuler/{id}/
- *   modifier_plafond()            → GET/POST /transactions/plafond/{id}/
- *   virements_recurrents()        → GET  /transactions/recurrents/
- *   creer_virement_recurrent()    → GET/POST /transactions/recurrents/creer/
- *   toggle_virement_recurrent()   → POST /transactions/recurrents/{id}/toggle/
- *   supprimer_virement_recurrent()→ GET/POST /transactions/recurrents/{id}/supprimer/
- */
+
 @Controller
 @RequestMapping("/transactions")
 public class TransactionController {
@@ -45,7 +33,6 @@ public class TransactionController {
         this.compteService      = compteService;
     }
 
-    // ── HISTORIQUE ────────────────────────────────────────────────────────
 
     /** GET /transactions/ */
     @GetMapping("/")
@@ -94,9 +81,6 @@ public class TransactionController {
         return "transactions/historique";
     }
 
-    // ── VIREMENT ──────────────────────────────────────────────────────────
-
-    /** GET /transactions/virement/ */
     @GetMapping("/virement/")
     public String virementGet(@AuthenticationPrincipal User user, Model model) {
         model.addAttribute("comptes", compteService.getComptesActifs(user));
@@ -116,7 +100,7 @@ public class TransactionController {
 
         List<Compte> comptes = compteService.getComptesActifs(user);
 
-        // Résolution des comptes
+
         Optional<Compte> source = compteService.getCompteActif(compte_source, user);
         Optional<Compte> dest   = compteService.getCompteParNumero(numero_destination.trim());
 
@@ -148,9 +132,6 @@ public class TransactionController {
         }
     }
 
-    // ── ANNULATION ────────────────────────────────────────────────────────
-
-    /** GET /transactions/annuler/{id}/ — page de confirmation */
     @GetMapping("/annuler/{id}/")
     public String confirmerAnnulation(
             @PathVariable Long id,
@@ -188,9 +169,7 @@ public class TransactionController {
         return "redirect:/transactions/";
     }
 
-    // ── PLAFOND ───────────────────────────────────────────────────────────
-
-    /** GET /transactions/plafond/{compteId}/ */
+  /** GET /transactions/plafond/{compteId}/ */
     @GetMapping("/plafond/{compteId}/")
     public String modifierPlafondGet(
             @PathVariable Long compteId,
@@ -231,8 +210,6 @@ public class TransactionController {
         return "redirect:/comptes/";
     }
 
-    // ── VIREMENTS RÉCURRENTS — LISTE ──────────────────────────────────────
-
     /** GET /transactions/recurrents/ */
     @GetMapping("/recurrents/")
     public String virementsRecurrents(@AuthenticationPrincipal User user, Model model) {
@@ -240,8 +217,6 @@ public class TransactionController {
         model.addAttribute("recurrents", transactionService.getVirements(user));
         return "transactions/virements_recurrents";
     }
-
-    // ── VIREMENTS RÉCURRENTS — CRÉER ──────────────────────────────────────
 
     /** GET /transactions/recurrents/creer/ */
     @GetMapping("/recurrents/creer/")
@@ -311,7 +286,6 @@ public class TransactionController {
         return "redirect:/transactions/recurrents/";
     }
 
-    // ── TOGGLE ────────────────────────────────────────────────────────────
 
     /** POST /transactions/recurrents/{id}/toggle/ */
     @PostMapping("/recurrents/{id}/toggle/")
@@ -328,7 +302,6 @@ public class TransactionController {
         return "redirect:/transactions/recurrents/";
     }
 
-    // ── SUPPRIMER ─────────────────────────────────────────────────────────
 
     /** GET /transactions/recurrents/{id}/supprimer/ — page de confirmation */
     @GetMapping("/recurrents/{id}/supprimer/")

@@ -44,8 +44,6 @@ public class JournalConnexion {
         this.dateConnexion = LocalDateTime.now();
     }
 
-    // ── Constructeur de commodité ─────────────────────────────────────────
-
     public JournalConnexion(User utilisateur, String adresseIp, boolean succes) {
         this.utilisateur = utilisateur;
         this.adresseIp   = adresseIp;

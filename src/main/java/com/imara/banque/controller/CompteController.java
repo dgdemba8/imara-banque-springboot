@@ -26,9 +26,9 @@ import java.util.*;
  * Contrôleur des comptes bancaires.
  *
  * Équivalent de {@code apps/comptes/views.py} Django :
- *   solde()          → GET /comptes/
- *   releve_pdf()     → GET /comptes/releve/{id}/pdf/
- *   releve_pdf_tous()→ GET /comptes/releve/tous/pdf/
+ *   solde()          -> GET /comptes/
+ *   releve_pdf()     -> GET /comptes/releve/{id}/pdf/
+ *   releve_pdf_tous() -> GET /comptes/releve/tous/pdf/
  */
 @Controller
 @RequestMapping("/comptes")
@@ -56,7 +56,7 @@ public class CompteController {
         this.objectMapper       = new ObjectMapper();
     }
 
-    // ── SOLDE + GRAPHIQUE ─────────────────────────────────────────────────
+
 
     /** GET /comptes/ */
     @GetMapping("/")
@@ -134,7 +134,7 @@ public class CompteController {
         return "comptes/solde";
     }
 
-    // ── RELEVÉ PDF — UN COMPTE ────────────────────────────────────────────
+
 
     /** GET /comptes/releve/{compteId}/pdf/ */
     @GetMapping("/releve/{compteId}/pdf/")
@@ -160,7 +160,7 @@ public class CompteController {
             .body(pdf);
     }
 
-    // ── RELEVÉ PDF — TOUS COMPTES ─────────────────────────────────────────
+
 
     /** GET /comptes/releve/tous/pdf/ */
     @GetMapping("/releve/tous/pdf/")

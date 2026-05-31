@@ -18,7 +18,6 @@ import java.time.LocalDateTime;
 @Getter @Setter @NoArgsConstructor
 public class Compte {
 
-    // ── Choix de type de compte ───────────────────────────────────────────
     public enum TypeCompte {
         courant("Compte Courant"),
         epargne("Compte Épargne");

@@ -89,7 +89,6 @@ public class VirementRecurrent {
         this.dateCreation = LocalDateTime.now();
     }
 
-    // ── Helpers d'affichage ───────────────────────────────────────────────
 
     public String getFrequenceDisplay() {
         return frequence != null ? frequence.getLibelle() : "";

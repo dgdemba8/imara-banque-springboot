@@ -5,11 +5,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
-/**
- * Contrôleur du tableau de bord.
- *
- * Équivalent de {@code apps/dashboard/views.py} Django.
- */
+
 @Controller
 @RequestMapping("/dashboard")
 public class DashboardController {

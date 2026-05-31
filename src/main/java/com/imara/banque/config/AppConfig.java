@@ -3,10 +3,7 @@ package com.imara.banque.config;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 
-/**
- * Configuration générale de l'application.
- * Les constantes métier lues depuis application.properties.
- */
+
 @Configuration
 public class AppConfig {
 

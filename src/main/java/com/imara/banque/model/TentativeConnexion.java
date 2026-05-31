@@ -50,8 +50,6 @@ public class TentativeConnexion {
         this.derniereTentative = LocalDateTime.now();
     }
 
-    // ── Propriétés calculées (équivalent @property Django) ─────────────────
-
     /**
      * True si le compte est actuellement bloqué.
      * Équivalent de {@code est_bloque} (property Django).
@@ -70,7 +68,7 @@ public class TentativeConnexion {
         return Math.max(secondes, 0L);
     }
 
-    // ── Constructeur de commodité ──────────────────────────────────────────
+    // Constructeur de commodité
 
     public TentativeConnexion(String username, String adresseIp) {
         this.username   = username;

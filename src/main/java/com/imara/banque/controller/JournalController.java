@@ -11,11 +11,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 import java.util.List;
 
-/**
- * Contrôleur du journal de connexions.
- *
- * Équivalent de {@code apps/journal/views.py} Django.
- */
+
 @Controller
 @RequestMapping("/journal")
 public class JournalController {

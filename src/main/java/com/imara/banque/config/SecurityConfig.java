@@ -76,7 +76,6 @@ public class SecurityConfig {
                 .anyRequest().authenticated()
             )
 
-            // ── Formulaire de login personnalisé ───────────────────────
             // Spring gère la session ; notre AuthController fait la logique
             // métier (blocage, journal, alerte).
             .formLogin(form -> form
@@ -86,7 +85,7 @@ public class SecurityConfig {
                 .permitAll()
             )
 
-            // ── Déconnexion ─────────────────────────────────────────────
+
             // Équivalent de logout() Django + redirect vers étape1
             .logout(logout -> logout
                 .logoutUrl("/auth/deconnexion/")
@@ -96,14 +95,14 @@ public class SecurityConfig {
                 .permitAll()
             )
 
-            // ── CSRF ────────────────────────────────────────────────────
+
             // Équivalent de CsrfViewMiddleware Django
             // CookieCsrfTokenRepository permet l'usage en AJAX (refresh-session)
             .csrf(csrf -> csrf
                 .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
             )
 
-            // ── Gestion de session ──────────────────────────────────────
+
             .sessionManagement(session -> session
                 .maximumSessions(5)            // max sessions simultanées par user
                 .expiredUrl("/auth/?expired")

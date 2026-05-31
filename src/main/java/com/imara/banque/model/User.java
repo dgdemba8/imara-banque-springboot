@@ -59,7 +59,6 @@ public class User implements UserDetails {
         this.dateJoined = LocalDateTime.now();
     }
 
-    // ── UserDetails ───────────────────────────────────────────────────────
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
