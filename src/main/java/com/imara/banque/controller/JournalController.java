@@ -11,7 +11,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 import java.util.List;
 
-
 @Controller
 @RequestMapping("/journal")
 public class JournalController {
@@ -22,8 +21,7 @@ public class JournalController {
         this.journalRepo = journalRepo;
     }
 
-    /** GET /journal/ — Historique des connexions de l'utilisateur. */
-    @GetMapping("/")
+    @GetMapping({"/", "/journal"})
     public String journal(@AuthenticationPrincipal User user, Model model) {
         List<JournalConnexion> connexions =
             journalRepo.findByUtilisateurOrderByDateConnexionDesc(user);

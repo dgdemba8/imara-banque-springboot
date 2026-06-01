@@ -80,8 +80,7 @@ public class SecurityConfig {
             // métier (blocage, journal, alerte).
             .formLogin(form -> form
                 .loginPage("/auth/")
-                .defaultSuccessUrl("/dashboard/", true)
-                .failureUrl("/auth/?error")
+                .loginProcessingUrl("/auth/login-spring/") // URL fictive jamais utilisée
                 .permitAll()
             )
 

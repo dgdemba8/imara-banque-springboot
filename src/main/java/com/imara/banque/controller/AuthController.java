@@ -5,6 +5,12 @@ import com.imara.banque.service.AuthService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;                              // ← AJOUT
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -18,11 +24,12 @@ import java.util.Optional;
 public class AuthController {
 
     private final AuthService authService;
+    private final AuthenticationManager authManager;
 
-    public AuthController(AuthService authService) {
+    public AuthController(AuthService authService, AuthenticationManager authManager) {
         this.authService = authService;
+        this.authManager = authManager;
     }
-
 
     private String getIp(HttpServletRequest request) {
         String forwarded = request.getHeader("X-Forwarded-For");
@@ -31,8 +38,6 @@ public class AuthController {
         }
         return request.getRemoteAddr();
     }
-
-
 
     /** GET /auth/ */
     @GetMapping("/")
@@ -65,8 +70,6 @@ public class AuthController {
         return "redirect:/auth/password/";
     }
 
-
-
     /** GET /auth/password/ */
     @GetMapping("/password/")
     public String etape2Get(HttpSession session, Model model) {
@@ -96,21 +99,30 @@ public class AuthController {
                 authService.tenterConnexion(username, password, ip);
 
         if (result.succes()) {
-            // On utilise request.login() pour établir correctement la session
-            // Spring Security (remplace SecurityContextHolder seul qui
-            // ne persiste pas entre les requêtes).
             try {
-                session.removeAttribute("username_temp");
-                request.login(username, password);
+                Authentication auth = authManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(username, password)
+                );
+
+                SecurityContext context = SecurityContextHolder.createEmptyContext();
+                context.setAuthentication(auth);
+                SecurityContextHolder.setContext(context);
+
+                HttpSession newSession = request.getSession(true);
+                newSession.setAttribute(
+                    HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY,
+                    context
+                );
+                newSession.removeAttribute("username_temp");
+
+                return "redirect:/dashboard/";
+
             } catch (Exception e) {
-                // Ne devrait pas arriver (AuthService a déjà validé)
                 model.addAttribute("erreur", "Erreur lors de la connexion, réessayez.");
                 model.addAttribute("username", username);
                 return "accounts/step2_password";
             }
-            return "redirect:/dashboard/";
         }
-
 
         if (result.bloque()) {
             session.setAttribute("bloque_username", username);
@@ -118,14 +130,11 @@ public class AuthController {
             return "redirect:/auth/bloque/";
         }
 
-
         model.addAttribute("username", username);
         model.addAttribute("erreur", result.message());
         model.addAttribute("tentativesRestantes", result.tentativesRestantes());
         return "accounts/step2_password";
     }
-
-
 
     /** GET /auth/bloque/ */
     @GetMapping("/bloque/")
@@ -150,8 +159,6 @@ public class AuthController {
         model.addAttribute("secondes", secondes);
         return "accounts/compte_bloque";
     }
-
-
 
     /** POST /auth/refresh-session/ */
     @PostMapping("/refresh-session/")

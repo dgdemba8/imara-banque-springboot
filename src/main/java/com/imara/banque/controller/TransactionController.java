@@ -35,7 +35,7 @@ public class TransactionController {
 
 
     /** GET /transactions/ */
-    @GetMapping("/")
+    @GetMapping({"/", "/historique"})
     public String historique(
             @AuthenticationPrincipal User user,
             @RequestParam(required = false) Long compte,
@@ -81,14 +81,14 @@ public class TransactionController {
         return "transactions/historique";
     }
 
-    @GetMapping("/virement/")
+    @GetMapping("/virement")
     public String virementGet(@AuthenticationPrincipal User user, Model model) {
         model.addAttribute("comptes", compteService.getComptesActifs(user));
         return "transactions/virement";
     }
 
     /** POST /transactions/virement/ */
-    @PostMapping("/virement/")
+    @PostMapping("/virement")
     public String virementPost(
             @AuthenticationPrincipal User user,
             @RequestParam Long compte_source,
@@ -211,7 +211,7 @@ public class TransactionController {
     }
 
     /** GET /transactions/recurrents/ */
-    @GetMapping("/recurrents/")
+    @GetMapping({"/recurrents/", "/virements-recurrents"})
     public String virementsRecurrents(@AuthenticationPrincipal User user, Model model) {
         model.addAttribute("comptes",    compteService.getComptesActifs(user));
         model.addAttribute("recurrents", transactionService.getVirements(user));

@@ -59,7 +59,7 @@ public class CompteController {
 
 
     /** GET /comptes/ */
-    @GetMapping("/")
+    @GetMapping({"/", "/solde"})
     public String solde(@AuthenticationPrincipal User user, Model model) throws Exception {
         List<Compte> comptes = compteService.getComptesActifs(user);
 
